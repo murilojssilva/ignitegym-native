@@ -4,6 +4,8 @@ import { Group } from "@components/Group";
 import { HomeHeader } from "@components/HomeHeader";
 import { HStack, VStack, FlatList, Heading, Text } from "native-base";
 import { ExerciseCard } from "@components/ExerciseCard";
+import { useNavigation } from "@react-navigation/native";
+import { AppNavigatorRoutesProps } from "@routes/app.routes";
 
 export function Home() {
   const [groups, setGroups] = useState([
@@ -19,6 +21,12 @@ export function Home() {
     { title: "Remada unilateral", description: "Outra coisa" },
   ]);
   const [groupSelected, setGroupSelected] = useState("costas");
+
+  const { navigate } = useNavigation<AppNavigatorRoutesProps>();
+
+  function handleOpenExerciseDetails() {
+    navigate("exercise");
+  }
   return (
     <VStack flex={1}>
       <HomeHeader />
@@ -37,6 +45,7 @@ export function Home() {
         _contentContainerStyle={{ px: 8 }}
         my={10}
         maxH={10}
+        minH={10}
       />
       <VStack flex={1} px={8} mb={5}>
         <HStack justifyContent="space-between">
@@ -52,7 +61,11 @@ export function Home() {
           data={exercises}
           keyExtractor={(item) => item.title}
           renderItem={({ item }) => (
-            <ExerciseCard title={item.title} description={item.description} />
+            <ExerciseCard
+              onPress={handleOpenExerciseDetails}
+              title={item.title}
+              description={item.description}
+            />
           )}
           showsVerticalScrollIndicator={false}
           _contentContainerStyle={{ pb: 20 }}
