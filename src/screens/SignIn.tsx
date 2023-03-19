@@ -1,13 +1,16 @@
-import { VStack, Image, Text, Center, Heading, ScrollView } from "native-base";
+import { Controller, useForm } from "react-hook-form";
 import { useNavigation } from "@react-navigation/native";
+import { VStack, Image, Text, Center, Heading, ScrollView } from "native-base";
 
-import { useForm, Controller } from "react-hook-form";
+import { AuthNavigatorRoutesProps } from "@routes/auth.routes";
+
+import { useAuth } from "@hooks/useAuth";
 
 import BackgroundImg from "@assets/background.png";
 import LogoSvg from "@assets/logo.svg";
+
 import { Input } from "@components/Input";
 import { Button } from "@components/Button";
-import { AuthNavigatorRoutesProps } from "@routes/auth.routes";
 
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -25,6 +28,7 @@ const signInSchema = Yup.object({
 });
 
 export function SignIn() {
+  const { signIn, isLoading } = useAuth();
   const {
     control,
     handleSubmit,
@@ -36,8 +40,8 @@ export function SignIn() {
     navigate("signUp");
   }
 
-  function handleSignIn(data: FormDataProps) {
-    console.log(data);
+  async function handleSignIn({ email, password }: FormDataProps) {
+    await signIn(email, password);
   }
 
   return (
@@ -91,7 +95,11 @@ export function SignIn() {
               />
             )}
           />
-          <Button title="Acessar" onPress={handleSubmit(handleSignIn)} />
+          <Button
+            title="Acessar"
+            onPress={handleSubmit(handleSignIn)}
+            isLoading={isLoading}
+          />
         </Center>
         <Center mt={24}>
           <Text color="gray.100" fontSize="sm" mb={3} fontFamily="body">
