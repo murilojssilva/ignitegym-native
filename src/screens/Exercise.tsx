@@ -18,7 +18,7 @@ import SeriesSVG from "@assets/series.svg";
 import RepetitionsSVG from "@assets/repetitions.svg";
 import { Button } from "@components/Button";
 import { api } from "@services/api";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ExerciseDTO } from "@dtos/ExerciseDTO";
 import { AppError } from "@utils/AppError";
 import { Loading } from "@components/Loading";
