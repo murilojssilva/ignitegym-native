@@ -8,9 +8,15 @@ import {
   storageUserRemove,
   storageUserSave,
 } from "@storage/storageUser";
+import {
+  storageAuthTokenGet,
+  storageAuthTokenRemove,
+  storageAuthTokenSave,
+} from "@storage/storageAuthToken";
 
 export type AuthContextDataProps = {
   user: UserDTO;
+  updateUserProfile: (userUpdate: UserDTO) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   isLoading: boolean;
@@ -33,24 +39,44 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
 
   const toast = useToast();
 
+  async function userAndTokenUpdate(userData: UserDTO, token: string) {
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+    setUser(userData);
+  }
+
+  async function storageUserAndTokenSave(userData: UserDTO, token: string) {
+    try {
+      setIsLoadingUserStorageData(true);
+
+      await storageUserSave(userData);
+      await storageAuthTokenSave(token);
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoadingUserStorageData(false);
+    }
+  }
+
   async function signIn(email: string, password: string) {
     try {
-      setIsLoading(true);
       const { data } = await api.post("/sessions", { email, password });
 
-      if (data.user) {
-        setUser(data.user);
-        storageUserSave(data.user);
+      if (data.user && data.token) {
+        await storageUserAndTokenSave(data.user, data.token);
+        userAndTokenUpdate(data.user, data.token);
       }
     } catch (error) {
       const isAppError = error instanceof AppError;
 
       const title = isAppError
         ? error.message
-        : "Não foi possível acessar. Tente novamente mais tarde";
+        : "Não foi possível acessar o sistema. Tente novamente mais tarde";
       setIsLoading(false);
 
       toast.show({ title, placement: "top", bgColor: "red.500" });
+    } finally {
+      setIsLoadingUserStorageData(true);
     }
   }
 
@@ -60,6 +86,7 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
       setUser({} as UserDTO);
 
       await storageUserRemove();
+      await storageAuthTokenRemove();
     } catch (error) {
       throw error;
     } finally {
@@ -67,11 +94,23 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
     }
   }
 
+  async function updateUserProfile(userUpdate: UserDTO) {
+    try {
+      setUser(userUpdate);
+      await storageUserSave(userUpdate);
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async function loadUserData() {
     try {
+      setIsLoadingUserStorageData(true);
       const userLogged = await storageUserGet();
-      if (userLogged) {
-        setUser(userLogged);
+      const token = await storageAuthTokenGet();
+
+      if (token && userLogged) {
+        userAndTokenUpdate(userLogged, token);
       }
     } catch (error) {
       throw error;
@@ -92,6 +131,7 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
         signOut,
         isLoading,
         isLoadingUserStorageData,
+        updateUserProfile,
       }}
     >
       {children}
