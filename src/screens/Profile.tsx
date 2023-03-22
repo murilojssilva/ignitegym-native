@@ -92,12 +92,13 @@ export function Profile() {
 
       if (photoSelected.assets[0].uri) {
         const photoInfo = await FileSystem.getInfoAsync(
-          String(photoSelected.assets[0].fileSize)
+          photoSelected.assets[0].uri,
+          { size: true }
         );
 
-        if (photoInfo && Number(photoInfo) / 1024 / 1024 > 5) {
+        if (photoInfo.exists && photoInfo.size > 1024 * 1024 * 1) {
           return toast.show({
-            title: "Essa imagem é muito grande. Escolha uma de até 5MB.",
+            title: "A imagem deve ter no máximo 3MB",
             placement: "top",
             bgColor: "red.500",
           });
